@@ -24,6 +24,23 @@ st.title("🔥 Pacos NetInsight - CSV Network Analyzer 🔥")
 uploaded_file = st.file_uploader("Upload your network log CSV", type="csv")
 
 if uploaded_file is not None:
+    # Load CSV
+    df = pd.read_csv(uploaded_file, encoding='utf-8-sig')
+    
+    # --- CLEAN COLUMN NAMES ---
+    df.columns = [str(col).strip().lower().replace(" ", "_") for col in df.columns]
+    
+    # --- CHECK REQUIRED COLUMNS ---
+    required_cols = ['timestamp','source_ip','port','packet_size','failed_logins','traffic_type']
+    missing_cols = [c for c in required_cols if c not in df.columns]
+    if missing_cols:
+        st.error(f"Uploaded CSV is missing required columns: {missing_cols}")
+        st.write("Columns detected in CSV:", df.columns.tolist())
+        st.stop()
+    
+    st.success(f"Loaded {len(df)} packets from CSV")
+
+if uploaded_file is not None:
     # --- LOAD CSV ---
     df = load_csv(uploaded_file)
 
