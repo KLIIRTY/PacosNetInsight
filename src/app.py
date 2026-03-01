@@ -4,7 +4,6 @@ import sys
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
-import time
 
 # --- ENSURE RELATIVE IMPORTS WORK ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -25,11 +24,8 @@ st.title("🔥 Pacos NetInsight - CSV Network Analyzer 🔥")
 uploaded_file = st.file_uploader("Upload your network log CSV", type="csv")
 
 if uploaded_file is not None:
-    # Load CSV
+    # --- LOAD CSV ---
     df = load_csv(uploaded_file)
-    
-    # --- SANITIZE COLUMN NAMES ---
-    df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
 
     # --- CHECK REQUIRED COLUMNS ---
     required_cols = ['timestamp','source_ip','port','packet_size','failed_logins','traffic_type']

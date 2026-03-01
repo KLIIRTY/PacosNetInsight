@@ -1,14 +1,9 @@
-# src/net_parser.py
 import pandas as pd
 
 def load_csv(uploaded_file):
-    """
-    Load a network log CSV from a Streamlit file uploader.
-    """
-    # Ensure the uploaded file is read correctly as CSV
-    df = pd.read_csv(uploaded_file)
-    
-    # Optional: normalize column names to prevent KeyErrors
+    df = pd.read_csv(uploaded_file, encoding='utf-8-sig', sep=',')
+    # Remove empty columns (e.g., trailing tabs)
+    df = df.loc[:, df.columns.notnull()]
+    # Normalize column names
     df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
-    
     return df
