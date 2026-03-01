@@ -4,5 +4,4 @@ matplotlib
 streamlit
 scikit-learn
 prophet
-altair==4.2.2
-scapy
+altair>=4.2.0

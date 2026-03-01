@@ -1,26 +1,23 @@
 # src/features.py
 import pandas as pd
+import numpy as np
 
 def engineer_features(df):
-    """
-    Simple feature engineering: ensures numeric columns exist.
-    """
-    df['packet_size'] = df['packet_size'].astype(int)
-    df['failed_logins'] = df['failed_logins'].astype(int)
-    df['port'] = df['port'].fillna(0).astype(int)
-    return df
+    """Create features for anomaly detection and traffic classification."""
+    features = pd.DataFrame()
+    features['packet_size'] = df['packet_size']
+    features['failed_logins'] = df.get('failed_logins', 0)
+    # Add more features as needed
+    return features
 
 def classify_traffic(features_df):
-    """
-    Classify traffic type based on simple rules (Web, Streaming, Other).
-    """
+    """Classify traffic type based on simple thresholds."""
     conditions = [
-        (features_df['port'].isin([80, 443])),
-        (features_df['port'].isin([1935, 554, 1755]))  # common streaming ports
+        (features_df['packet_size'] > 1000),
+        (features_df['failed_logins'] > 3)
     ]
-    choices = ['Web', 'Streaming']
-
-    # Use numpy from pandas or import numpy directly
-    import numpy as np
-    features_df['traffic_type'] = pd.Series(np.select(conditions, choices, default='Other'))
+    choices = ['Web', 'Other']
+    features_df['traffic_type'] = pd.Series(
+        np.select(conditions, choices, default='Other')
+    )
     return features_df['traffic_type']
