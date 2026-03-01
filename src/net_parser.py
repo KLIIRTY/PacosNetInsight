@@ -1,26 +1,34 @@
-from scapy.all import sniff, IP, TCP, UDP
+# src/net_parser.py
 import pandas as pd
 from datetime import datetime
 
-def capture_packets(count=20, iface=None):
-    packets = sniff(count=count, iface=iface, timeout=2)
+try:
+    from scapy.all import sniff, IP, TCP, UDP
+    SCAPY_AVAILABLE = True
+except ImportError:
+    SCAPY_AVAILABLE = False
+    print("Scapy not installed; live packet capture disabled")
 
-    data = []
-    for pkt in packets:
-        if IP in pkt:
-            src = pkt[IP].src
-            dst = pkt[IP].dst
-            sport = pkt[TCP].sport if TCP in pkt else (pkt[UDP].sport if UDP in pkt else 0)
-            dport = pkt[TCP].dport if TCP in pkt else (pkt[UDP].dport if UDP in pkt else 0)
-            size = len(pkt)
-            failed_logins = 0  # placeholder, in real scenario get from logs
-            timestamp = datetime.now()
-            data.append({
-                "timestamp": timestamp,
-                "source_ip": src,
-                "destination_ip": dst,
-                "port": dport,
-                "packet_size": size,
-                "failed_logins": failed_logins
-            })
-    return pd.DataFrame(data)
+def capture_packets(count=20, iface=None):
+    """
+    Capture live network packets. Returns a DataFrame.
+    If scapy is not installed or running on Streamlit Cloud, returns empty DataFrame.
+    """
+    if not SCAPY_AVAILABLE:
+        return pd.DataFrame()  # fallback for cloud / missing scapy
+
+    packets_list = []
+
+    def process_packet(packet):
+        pkt_info = {
+            "timestamp": datetime.now(),
+            "source_ip": packet[IP].src if IP in packet else None,
+            "destination_ip": packet[IP].dst if IP in packet else None,
+            "port": packet[TCP].sport if TCP in packet else (packet[UDP].sport if UDP in packet else None),
+            "packet_size": len(packet),
+            "failed_logins": 0,  # placeholder, can extend with real logic
+        }
+        packets_list.append(pkt_info)
+
+    sniff(iface=iface, prn=process_packet, count=count, store=False)
+    return pd.DataFrame(packets_list)
