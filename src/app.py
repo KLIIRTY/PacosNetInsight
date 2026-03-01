@@ -1,66 +1,82 @@
 import sys
 import os
+import time
 import pandas as pd
-import streamlit as st
+import numpy as np
 import matplotlib.pyplot as plt
+import streamlit as st
 
-# Make sure Python can find modules in the same folder
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # src/
+# Add src to path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
 
-# Correct imports (no 'src.' prefix)
-from net_parser import load_logs
-from features import engineer_features
-from model import detect_anomalies
-# Risk assignment function
-def assign_risk(row):
-    if row['failed_logins'] >= 3 or row['packet_size'] > 8000:
-        return "HIGH"
-    elif row['port'] in [22, 3389]:
-        return "MEDIUM"
-    else:
-        return "LOW"
+from net_parser import capture_packets
+from features import engineer_features, classify_traffic
+from model import detect_anomalies, assign_risk
+from prediction import forecast_traffic
 
-# Load network logs CSV
-PROJECT_ROOT = os.path.dirname(BASE_DIR)  # one level up from src/
-DATA_PATH = os.path.join(PROJECT_ROOT, "data", "network_log.csv")
-df = load_logs(DATA_PATH)
+# --- STREAMLIT PAGE SETUP ---
+st.set_page_config(page_title="Pacos NetInsight - Industrial", layout="wide")
+st.title("🔥 Pacos NetInsight - Live Industrial Network Monitor 🔥")
 
-# Feature engineering and anomaly detection
-features = engineer_features(df)
-predictions = detect_anomalies(features)
+# --- STREAMLIT PLACEHOLDERS ---
+summary_placeholder = st.empty()
+anomaly_placeholder = st.empty()
+traffic_plot_placeholder = st.empty()
+forecast_plot_placeholder = st.empty()
 
-df['anomaly'] = predictions
-df['risk_level'] = df.apply(assign_risk, axis=1)
-anomalies = df[df['anomaly'] == -1]
+# --- LIVE MONITOR LOOP ---
+iface = None  # Set your interface if needed, e.g., "en0" for Wi-Fi
+packets_per_batch = 20  # number of packets per refresh
+traffic_log = pd.DataFrame()
 
-# -------------------------
-# Streamlit UI
-# -------------------------
-st.set_page_config(page_title="Pacos NetInsight", layout="wide")
-st.title(" Pacos NetInsight Dashboard ")
+st.info("Starting live packet capture... (requires admin/root privileges)")
 
-# Summary
-st.subheader("Summary")
-st.markdown(f"- Total Logs Analyzed: {len(df)}")
-st.markdown(f"- Anomalies Detected: {len(anomalies)}")
+try:
+    while True:
+        df = capture_packets(count=packets_per_batch, iface=iface)
+        if df.empty:
+            continue
 
-# Suspicious activity table
-st.subheader("Suspicious Activity")
-if len(anomalies) > 0:
-    st.dataframe(anomalies[['timestamp','source_ip','port','packet_size','failed_logins','risk_level']])
-else:
-    st.success("No suspicious activity detected!")
+        features = engineer_features(df)
+        df['traffic_type'] = classify_traffic(features)
+        df['anomaly'] = detect_anomalies(features)
+        df['risk_level'] = df.apply(assign_risk, axis=1)
 
-# Traffic spike visualization
-st.subheader("Visualizations")
-df['timestamp'] = pd.to_datetime(df['timestamp'])
-traffic_counts = df.groupby(df['timestamp'].dt.floor('T')).size()
+        traffic_log = pd.concat([traffic_log, df], ignore_index=True)
 
-fig, ax = plt.subplots(figsize=(10,4))
-ax.plot(traffic_counts.index, traffic_counts.values, marker='o')
-ax.set_title("Network Traffic Over Time (per minute)")
-ax.set_xlabel("Time")
-ax.set_ylabel("Number of Packets")
-st.pyplot(fig)
+        # --- DASHBOARD UPDATE ---
+        total_packets = len(traffic_log)
+        anomalies_detected = len(traffic_log[traffic_log['anomaly']==-1])
+        traffic_counts = traffic_log['traffic_type'].value_counts()
+
+        summary_placeholder.markdown(f"""
+        **Total Packets:** {total_packets}  
+        **Anomalies Detected:** {anomalies_detected}  
+        **Traffic Breakdown:** {dict(traffic_counts)}
+        """)
+
+        anomalies = traffic_log[traffic_log['anomaly']==-1]
+        if len(anomalies) > 0:
+            anomaly_placeholder.dataframe(anomalies[['timestamp','source_ip','port','packet_size','failed_logins','traffic_type','risk_level']])
+        else:
+            anomaly_placeholder.success("No suspicious activity detected!")
+
+        fig1, ax1 = plt.subplots()
+        traffic_counts.plot.pie(ax=ax1, autopct='%1.1f%%', startangle=90)
+        ax1.set_ylabel('')
+        traffic_plot_placeholder.pyplot(fig1)
+
+        forecast = forecast_traffic(traffic_log)
+        fig2, ax2 = plt.subplots(figsize=(10,4))
+        ax2.plot(forecast['ds'], forecast['yhat'], marker='o', label='Predicted Packets')
+        ax2.set_title("Predicted Traffic Volume")
+        ax2.set_xlabel("Time")
+        ax2.set_ylabel("Packets")
+        forecast_plot_placeholder.pyplot(fig2)
+
+        time.sleep(1)
+
+except KeyboardInterrupt:
+    st.warning("Live capture stopped by user.")
