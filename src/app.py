@@ -4,7 +4,6 @@ import sys
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
-import time
 
 # --- ENSURE RELATIVE IMPORTS WORK ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -15,7 +14,6 @@ if BASE_DIR not in sys.path:
 from net_parser import load_csv
 from features import engineer_features, classify_traffic
 from model import detect_anomalies, assign_risk
-from prediction import forecast_traffic
 
 # --- STREAMLIT PAGE SETUP ---
 st.set_page_config(page_title="Pacos NetInsight - Industrial", layout="wide")
@@ -25,10 +23,10 @@ st.title("🔥 Pacos NetInsight - CSV Network Analyzer 🔥")
 uploaded_file = st.file_uploader("Upload your network log CSV", type="csv")
 
 if uploaded_file is not None:
-    # --- LOAD CSV ---
+    # Load CSV
     df = load_csv(uploaded_file)
 
-    # --- NORMALIZE COLUMN NAMES ---
+    # --- SANITIZE COLUMN NAMES ---
     df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
 
     # --- CHECK REQUIRED COLUMNS ---
@@ -47,12 +45,7 @@ if uploaded_file is not None:
     df['traffic_type'] = classify_traffic(features)
 
     # --- ANOMALY DETECTION ---
-    numeric_features = features.select_dtypes(include=['int64','float64'])
-    if numeric_features.empty:
-        st.error("No numeric features found for anomaly detection!")
-        st.stop()
-    
-    df['anomaly'] = detect_anomalies(numeric_features)
+    df['anomaly'] = detect_anomalies(features)
     df['risk_level'] = df.apply(assign_risk, axis=1)
 
     # --- DASHBOARD ---
@@ -80,14 +73,8 @@ if uploaded_file is not None:
     ax1.set_ylabel('')
     st.pyplot(fig1)
 
-    st.subheader("Predicted Traffic Volume")
-    forecast = forecast_traffic(df)
-    fig2, ax2 = plt.subplots(figsize=(10,4))
-    ax2.plot(forecast['ds'], forecast['yhat'], marker='o', label='Predicted Packets')
-    ax2.set_title("Predicted Traffic Volume")
-    ax2.set_xlabel("Time")
-    ax2.set_ylabel("Packets")
-    st.pyplot(fig2)
+    # --- TRAFFIC FORECASTING REMOVED ---
+    st.info("Traffic forecasting disabled to simplify deployment.")
 
     # --- DOWNLOAD ANALYZED CSV ---
     st.download_button(
@@ -96,5 +83,6 @@ if uploaded_file is not None:
         file_name="analyzed_network.csv",
         mime="text/csv"
     )
+
 else:
     st.info("Please upload a CSV file to start analysis.")

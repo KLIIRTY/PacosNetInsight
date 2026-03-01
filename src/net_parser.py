@@ -1,25 +1,37 @@
 # src/net_parser.py
 import pandas as pd
+import io
 
 def load_csv(uploaded_file):
     """
-    Load a network log CSV for Streamlit safely.
-    Handles uploaded files and normalizes column names.
+    Load a network log CSV for analysis and normalize columns.
+    Handles:
+        - BOM / UTF-8-sig
+        - Extra spaces in headers
+        - Trailing commas / empty columns
+        - Uploaded file-like objects
     """
-    # Reset file pointer (important for repeated reads in Streamlit)
-    uploaded_file.seek(0)
+    try:
+        # Reset file pointer if re-uploaded
+        if hasattr(uploaded_file, 'seek'):
+            uploaded_file.seek(0)
 
-    # Read CSV
-    df = pd.read_csv(uploaded_file, encoding='utf-8-sig', sep=',')
+        # Read CSV (handle UTF-8 BOM, comma separator)
+        df = pd.read_csv(uploaded_file, encoding='utf-8-sig', sep=',', engine='python')
 
-    # Remove completely empty columns (e.g., trailing commas)
-    df = df.loc[:, df.columns.notnull()]
+        # Remove completely empty columns (e.g., from trailing commas)
+        df = df.loc[:, df.columns.notnull()]
 
-    # Strip whitespace and normalize column names
-    df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+        # Normalize column names: lowercase, strip spaces, replace spaces with underscores
+        df.columns = [str(col).strip().lower().replace(" ", "_") for col in df.columns]
 
-    # Ensure dataframe is not empty
-    if df.empty:
+        # Strip leading/trailing spaces in string values
+        for col in df.select_dtypes(include='object').columns:
+            df[col] = df[col].str.strip()
+
+        return df
+
+    except pd.errors.EmptyDataError:
         raise ValueError("Uploaded CSV is empty or invalid.")
-
-    return df
+    except Exception as e:
+        raise ValueError(f"Error loading CSV: {e}")
