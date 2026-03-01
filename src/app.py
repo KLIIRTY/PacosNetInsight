@@ -25,7 +25,7 @@ uploaded_file = st.file_uploader("Upload your network log CSV", type="csv")
 if uploaded_file is not None:
     # Load CSV
     df = load_csv(uploaded_file)
-
+    
     # --- SANITIZE COLUMN NAMES ---
     df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
 
@@ -45,7 +45,12 @@ if uploaded_file is not None:
     df['traffic_type'] = classify_traffic(features)
 
     # --- ANOMALY DETECTION ---
-    df['anomaly'] = detect_anomalies(features)
+    numeric_features = features.select_dtypes(include=['int64', 'float64'])
+    if numeric_features.empty:
+        st.error("No numeric features available for anomaly detection!")
+        st.stop()
+
+    df['anomaly'] = detect_anomalies(numeric_features)
     df['risk_level'] = df.apply(assign_risk, axis=1)
 
     # --- DASHBOARD ---
@@ -72,9 +77,6 @@ if uploaded_file is not None:
                             colors=['#1f77b4','#ff7f0e','#d62728','#2ca02c'])
     ax1.set_ylabel('')
     st.pyplot(fig1)
-
-    # --- TRAFFIC FORECASTING REMOVED ---
-    st.info("Traffic forecasting disabled to simplify deployment.")
 
     # --- DOWNLOAD ANALYZED CSV ---
     st.download_button(
