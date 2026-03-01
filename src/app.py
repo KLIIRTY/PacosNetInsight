@@ -4,6 +4,7 @@ import sys
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
+import time
 
 # --- ENSURE RELATIVE IMPORTS WORK ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -24,25 +25,11 @@ st.title("🔥 Pacos NetInsight - CSV Network Analyzer 🔥")
 uploaded_file = st.file_uploader("Upload your network log CSV", type="csv")
 
 if uploaded_file is not None:
-    # Load CSV
-    df = pd.read_csv(uploaded_file, encoding='utf-8-sig')
-    
-    # --- CLEAN COLUMN NAMES ---
-    df.columns = [str(col).strip().lower().replace(" ", "_") for col in df.columns]
-    
-    # --- CHECK REQUIRED COLUMNS ---
-    required_cols = ['timestamp','source_ip','port','packet_size','failed_logins','traffic_type']
-    missing_cols = [c for c in required_cols if c not in df.columns]
-    if missing_cols:
-        st.error(f"Uploaded CSV is missing required columns: {missing_cols}")
-        st.write("Columns detected in CSV:", df.columns.tolist())
-        st.stop()
-    
-    st.success(f"Loaded {len(df)} packets from CSV")
-
-if uploaded_file is not None:
     # --- LOAD CSV ---
     df = load_csv(uploaded_file)
+
+    # --- NORMALIZE COLUMN NAMES ---
+    df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
 
     # --- CHECK REQUIRED COLUMNS ---
     required_cols = ['timestamp','source_ip','port','packet_size','failed_logins','traffic_type']
@@ -60,7 +47,12 @@ if uploaded_file is not None:
     df['traffic_type'] = classify_traffic(features)
 
     # --- ANOMALY DETECTION ---
-    df['anomaly'] = detect_anomalies(features)
+    numeric_features = features.select_dtypes(include=['int64','float64'])
+    if numeric_features.empty:
+        st.error("No numeric features found for anomaly detection!")
+        st.stop()
+    
+    df['anomaly'] = detect_anomalies(numeric_features)
     df['risk_level'] = df.apply(assign_risk, axis=1)
 
     # --- DASHBOARD ---
