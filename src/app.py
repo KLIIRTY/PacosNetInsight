@@ -25,16 +25,28 @@ st.title("🔥 Pacos NetInsight - CSV Network Analyzer 🔥")
 uploaded_file = st.file_uploader("Upload your network log CSV", type="csv")
 
 if uploaded_file is not None:
+    # Load CSV
     df = load_csv(uploaded_file)
+    
+    # --- SANITIZE COLUMN NAMES ---
+    df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
+
+    # --- CHECK REQUIRED COLUMNS ---
+    required_cols = ['timestamp','source_ip','port','packet_size','failed_logins','traffic_type']
+    missing_cols = [c for c in required_cols if c not in df.columns]
+    if missing_cols:
+        st.error(f"Uploaded CSV is missing required columns: {missing_cols}")
+        st.stop()
+
     st.success(f"Loaded {len(df)} packets from CSV")
 
-    # Feature engineering
+    # --- FEATURE ENGINEERING ---
     features = engineer_features(df)
 
-    # Traffic classification
+    # --- TRAFFIC CLASSIFICATION ---
     df['traffic_type'] = classify_traffic(features)
 
-    # Anomaly detection
+    # --- ANOMALY DETECTION ---
     df['anomaly'] = detect_anomalies(features)
     df['risk_level'] = df.apply(assign_risk, axis=1)
 
@@ -72,7 +84,7 @@ if uploaded_file is not None:
     ax2.set_ylabel("Packets")
     st.pyplot(fig2)
 
-    # Allow user to download analyzed CSV
+    # --- DOWNLOAD ANALYZED CSV ---
     st.download_button(
         label="Download Analyzed CSV",
         data=df.to_csv(index=False),
