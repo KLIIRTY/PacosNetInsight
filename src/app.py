@@ -1,21 +1,26 @@
 # src/app.py
 import sys
 import os
-import time
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
+import time
 
-# --- ENSURE RELATIVE IMPORTS WORK ---
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # src/
+# Ensure src/ is in path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
 
+# Detect cloud
+RUNNING_ON_CLOUD = os.environ.get("STREAMLIT_DEPLOY") == "true"
+
 # --- IMPORT INTERNAL MODULES ---
-from net_parser import capture_packets
 from features import engineer_features, classify_traffic
 from model import detect_anomalies, assign_risk
 from prediction import forecast_traffic
+
+if not RUNNING_ON_CLOUD:
+    from net_parser import capture_packets  # only import if running locally
 
 # --- STREAMLIT PAGE SETUP ---
 st.set_page_config(page_title="Pacos NetInsight - Industrial", layout="wide")
@@ -27,17 +32,13 @@ anomaly_placeholder = st.empty()
 traffic_plot_placeholder = st.empty()
 forecast_plot_placeholder = st.empty()
 
-# --- CONFIG ---
-iface = None  # e.g., "en0" for Wi-Fi
-packets_per_batch = 20
 traffic_log = pd.DataFrame()
-
-# --- CLOUD DETECTION ---
-RUNNING_ON_CLOUD = os.environ.get("STREAMLIT_DEPLOY") == "true"
+packets_per_batch = 20
+iface = None
 
 if RUNNING_ON_CLOUD:
     st.info("Running on Streamlit Cloud – using CSV mock data")
-    df = pd.read_csv(os.path.join(os.path.dirname(BASE_DIR), "data", "network_log.csv"))
+    df = pd.read_csv(os.path.join(BASE_DIR, "..", "data", "network_log.csv"))
     traffic_log = df.copy()
 else:
     st.info("Starting live packet capture... (requires admin/root privileges)")
