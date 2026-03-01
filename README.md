@@ -1,15 +1,13 @@
-# 🔥 Pacos NetInsight
+#  Pacos NetInsight
 
 Pacos NetInsight is an **AI-powered network anomaly detection dashboard** built in Python and Streamlit. It monitors network traffic logs, detects suspicious activity using machine learning, assigns risk levels, and provides interactive visualizations in real-time.
 
----
 
-## 🌐 Live Demo
+## Live Demo
 Check out the live app here: [Pacos NetInsight](https://pacosnetinsight.streamlit.app/)
 
----
 
-## 🛠 Features
+##  Features
 - **Network Log Analysis:** Reads network traffic logs from CSV files.  
 - **Anomaly Detection:** Uses `IsolationForest` to detect suspicious activity.  
 - **Risk Assessment:** Assigns HIGH, MEDIUM, or LOW risk levels based on packet size, failed logins, and ports.  
@@ -19,9 +17,8 @@ Check out the live app here: [Pacos NetInsight](https://pacosnetinsight.streamli
   - Traffic visualization over time  
 - **Real-time Deployment:** Updates automatically on GitHub push using Streamlit Cloud.
 
----
 
-## ⚙️ Installation / Running Locally
+## Installation / Running Locally
 
 1. Clone the repository:
 
@@ -46,7 +43,7 @@ NetPacos/
 ├── requirements.txt        # Python dependencies
 └── README.md
 ``` 
-🧰 Tech Stack
+Tech Stack used
 
 Python 3.12
 
@@ -57,6 +54,6 @@ scikit-learn (IsolationForest)
 matplotlib
 
 Streamlit for the dashboard and deployment on Streamlit Cloud   
-🚀 Deployment
+Deployment
 
-Deployed on Streamlit Cloud. Any push to the main branch triggers an automatic redeploy.
+Deployed on Streamlit Cloud.
