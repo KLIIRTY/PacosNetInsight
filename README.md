@@ -1,59 +1,66 @@
-#  Pacos NetInsight
+# Pacos NetInsight
 
-Pacos NetInsight is an **AI-powered network anomaly detection dashboard** built in Python and Streamlit. It monitors network traffic logs, detects suspicious activity using machine learning, assigns risk levels, and provides interactive visualizations in real-time.
+Pacos NetInsight is an AI-driven network anomaly detection dashboard built with Python and Streamlit. It analyzes network log CSV files, detects suspicious packet flows, assigns risk levels, and helps security analysts spot abnormal behavior quickly.
 
+## Features
+- Network log ingestion from CSV files
+- Isolation Forest anomaly detection
+- Traffic type classification and risk scoring
+- Streamlit dashboard with summary metrics, time series, and suspicious activity view
+- Optional traffic forecasting using Prophet
+- Sample log generation for testing and demo purposes
 
-## Live Demo
-Check out the live app here: [Pacos NetInsight](https://pacosnetinsight.streamlit.app/)
-
-
-##  Features
-- **Network Log Analysis:** Reads network traffic logs from CSV files.  
-- **Anomaly Detection:** Uses `IsolationForest` to detect suspicious activity.  
-- **Risk Assessment:** Assigns HIGH, MEDIUM, or LOW risk levels based on packet size, failed logins, and ports.  
-- **Interactive Dashboard:** Streamlit-based dashboard with:
-  - Summary statistics
-  - Suspicious activity table
-  - Traffic visualization over time  
-- **Real-time Deployment:** Updates automatically on GitHub push using Streamlit Cloud.
-
-
-## Installation / Running Locally
-
-1. Clone the repository:
+## Installation
 
 ```bash
 git clone https://github.com/KLIIRTY/PacosNetInsight.git
 cd PacosNetInsight
 python -m venv venv
-source venv/bin/activate   # Mac/Linux
-venv\Scripts\activate      # Windows
+source venv/bin/activate
 pip install -r requirements.txt
-pip install -r requirements.txt
+```
+
+## Running locally
+
+1. Generate sample data (optional):
+
+```bash
+python src/generate_logs.py
+```
+
+2. Start the Streamlit app:
+
+```bash
 streamlit run src/app.py
+```
 
-NetPacos/
-├── data/                   # Sample network logs
-│   └── network_log.csv
-├── src/
-│   ├── app.py              # Streamlit dashboard
-│   ├── parser.py           # Network log parser
-│   ├── features.py         # Feature engineering
-│   └── model.py            # Anomaly detection logic
-├── requirements.txt        # Python dependencies
-└── README.md
-``` 
-Tech Stack used
+3. Run the CLI analyzer:
 
-Python 3.12
+```bash
+python src/main.py
+```
 
-pandas, numpy
+## Project structure
 
-scikit-learn (IsolationForest)
+```
+PacosNetInsight/
+├─ data/
+│  └─ network_log.csv
+├─ src/
+│  ├─ app.py
+│  ├─ features.py
+│  ├─ generate_logs.py
+│  ├─ main.py
+│  ├─ model.py
+│  ├─ net_parser.py
+│  ├─ prediction.py
+│  └─ __init__.py
+├─ requirements.txt
+└─ README.md
+```
 
-matplotlib
+## Tests
 
-Streamlit for the dashboard and deployment on Streamlit Cloud   
-Deployment
-
-Deployed on Streamlit Cloud.
+```bash
+pytest
+```

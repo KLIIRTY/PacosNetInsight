@@ -1,30 +1,20 @@
 import os
-from parser import load_logs
-from features import engineer_features
-from model import detect_anomalies
-
-
-def assign_risk(row):
-    # High Risk
-    if row['failed_logins'] >= 3 or row['packet_size'] > 8000:
-        return "HIGH"
-    # Medium Risk
-    elif row['port'] in [22, 3389]:
-        return "MEDIUM"
-    # Low Risk
-    else:
-        return "LOW"
+from net_parser import load_csv
+from features import engineer_features, classify_traffic
+from model import detect_anomalies, assign_risk
 
 
 def main():
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     DATA_PATH = os.path.join(BASE_DIR, "data", "network_log.csv")
 
-    df = load_logs(DATA_PATH)
-    features = engineer_features(df)
-    predictions = detect_anomalies(features)
+    if not os.path.exists(DATA_PATH):
+        raise FileNotFoundError(f"Sample network log not found: {DATA_PATH}")
 
-    df['anomaly'] = predictions
+    df = load_csv(DATA_PATH)
+    features = engineer_features(df)
+    df['traffic_type'] = classify_traffic(features)
+    df['anomaly'] = detect_anomalies(features)
     df['risk_level'] = df.apply(assign_risk, axis=1)
 
     total = len(df)
@@ -38,7 +28,7 @@ def main():
         print("\n⚠ Suspicious Activity Detected:\n")
         print(anomalies[
             ['timestamp', 'source_ip', 'port',
-             'packet_size', 'failed_logins', 'risk_level']
+             'packet_size', 'failed_logins', 'traffic_type', 'risk_level']
         ])
     else:
         print("\nNo suspicious activity detected.")
