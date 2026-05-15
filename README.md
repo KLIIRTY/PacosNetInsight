@@ -1,66 +1,56 @@
-# Pacos NetInsight
+Pacos NetInsight
+AI-Powered Network Intelligence & Telemetry Dashboard
+Pacos NetInsight is a containerized Network Operations Center (NOC) tool designed for real-time anomaly detection and predictive traffic forecasting. Built for the era of 5G and Software-Defined Networking (SDN), it leverages machine learning to transform raw network logs into actionable security intelligence.
 
-Pacos NetInsight is an AI-driven network anomaly detection dashboard built with Python and Streamlit. It analyzes network log CSV files, detects suspicious packet flows, assigns risk levels, and helps security analysts spot abnormal behavior quickly.
+🚀 Core Specializations
+Anomaly Detection: Utilizes Isolation Forest algorithms to detect suspicious packet flows and zero-day threats.
 
-## Features
-- Network log ingestion from CSV files
-- Isolation Forest anomaly detection
-- Traffic type classification and risk scoring
-- Streamlit dashboard with summary metrics, time series, and suspicious activity view
-- Optional traffic forecasting using Prophet
-- Sample log generation for testing and demo purposes
+Predictive Telemetry: Integrated with Facebook Prophet to forecast network traffic trends and identify potential capacity bottlenecks.
 
-## Installation
+Cloud-Native Architecture: Fully containerized using Docker for seamless deployment in Virtualized Network Function (VNF) environments.
 
-```bash
-git clone https://github.com/KLIIRTY/PacosNetInsight.git
-cd PacosNetInsight
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+Infrastructure as Code (IaC): Optimized for VS Code Dev Containers to ensure 100% environment parity.
 
-## Running locally
+🛠 Tech Stack
+Language: Python 3.11+
 
-1. Generate sample data (optional):
+Framework: Streamlit (NOC Dashboard)
 
-```bash
-python src/generate_logs.py
-```
+ML Engines: Scikit-learn (Isolation Forest), Facebook Prophet (Forecasting)
 
-2. Start the Streamlit app:
+Infrastructure: Docker, Dev Containers
 
-```bash
-streamlit run src/app.py
-```
+Data Science: Pandas, NumPy, SciPy
 
-3. Run the CLI analyzer:
+📦 Getting Started (The "NOC" Way)
+Option 1: Using Dev Containers (Recommended)
+This project is pre-configured for VS Code Dev Containers. This ensures your Mac stays cool and your environment is perfectly isolated.
 
-```bash
-python src/main.py
-```
+Clone the repo: git clone https://github.com/KLIIRTY/PacosNetInsight.git
 
-## Project structure
+Open the folder in VS Code.
 
-```
+Click "Reopen in Container" when prompted.
+
+The dashboard will automatically launch at http://localhost:8501.
+Option 2: Using Standard Docker
+docker build -t pacos-netinsight .
+docker run -p 8501:8501 pacos-netinsight
+📂 Project Architecture
 PacosNetInsight/
-├─ data/
-│  └─ network_log.csv
-├─ src/
-│  ├─ app.py
-│  ├─ features.py
-│  ├─ generate_logs.py
-│  ├─ main.py
-│  ├─ model.py
-│  ├─ net_parser.py
-│  ├─ prediction.py
-│  └─ __init__.py
-├─ requirements.txt
-└─ README.md
-```
-
-## Tests
-
-```bash
+├── .devcontainer/     # Environment Orchestration
+├── .streamlit/        # Dashboard Configuration
+├── data/              # Network Telemetry Logs
+├── src/               
+│   ├── app.py         # NOC Dashboard Interface
+│   ├── model.py       # ML Anomaly Detection Logic
+│   ├── prediction.py  # Prophet Forecasting Engine
+│   └── generate_logs.py # Synthetic Telemetry Generator
+├── Dockerfile         # VNF Build Instructions
+├── requirements.txt   # Dependency Manifest
+└── README.md          # Engineering Documentation
+🧪 Testing & Validation
+The system uses pytest to ensure logic consistency across network parsing and ML modules:
 pytest
-```
+👨‍💻 Author
+Kelvin Njiru NOC Engineer | Specialized in 5G, NFV, and SDN labs:https://kelvinjiru.netlify.app/networking
