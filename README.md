@@ -40,8 +40,8 @@ docker run -p 8501:8501 pacos-netinsight
 
 
 📂 Project Architecture
-
-
+## 📂 Project Architecture
+```text
 PacosNetInsight/
 ├── .devcontainer/     # Environment Orchestration
 ├── .streamlit/        # Dashboard Configuration
@@ -54,6 +54,7 @@ PacosNetInsight/
 ├── Dockerfile         # VNF Build Instructions
 ├── requirements.txt   # Dependency Manifest
 └── README.md          # Engineering Documentation
+```
 
 
 🧪 Testing & Validation
